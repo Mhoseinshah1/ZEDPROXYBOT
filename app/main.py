@@ -128,8 +128,8 @@ def admin_dashboard_page(request: Request):
     return templates.TemplateResponse('dashboard.html', {'request': request})
 
 @app.post('/api/admin/products')
-def create_product(title: str = Form(...), price: float = Form(...), days: int = Form(...), traffic_gb: int = Form(...), admin: Admin = Depends(admin_auth), db: Session = Depends(get_db)):
-    p = Product(title=title, price=price, days=days, traffic_gb=traffic_gb, is_active=True); db.add(p); db.commit(); audit(db, admin.id, 'product_create', {'id': p.id}); return {'ok': True, 'id': p.id}
+def create_product(title: str = Form(...), price: float = Form(...), days: int = Form(...), traffic_gb: int = Form(...), inbound_id: int | None = Form(None), admin: Admin = Depends(admin_auth), db: Session = Depends(get_db)):
+    p = Product(title=title, price=price, days=days, traffic_gb=traffic_gb, inbound_id=inbound_id, is_active=True); db.add(p); db.commit(); audit(db, admin.id, 'product_create', {'id': p.id}); return {'ok': True, 'id': p.id}
 
 @app.post('/api/admin/products/{product_id}')
 def update_product(product_id: int, title: str = Form(...), price: float = Form(...), admin: Admin = Depends(admin_auth), db: Session = Depends(get_db)):
@@ -138,3 +138,31 @@ def update_product(product_id: int, title: str = Form(...), price: float = Form(
 @app.delete('/api/admin/products/{product_id}')
 def delete_product(product_id: int, admin: Admin = Depends(admin_auth), db: Session = Depends(get_db)):
     p = db.get(Product, product_id); db.delete(p); db.commit(); return {'ok': True}
+
+@app.get('/api/admin/panels')
+def list_panels(_: Admin = Depends(admin_auth), db: Session = Depends(get_db)):
+    return [vars(x) for x in db.scalars(select(VpnPanel)).all()]
+
+@app.post('/api/admin/panels')
+def create_panel(name: str = Form(...), host: str = Form(...), port: int = Form(...), username: str = Form(...), password: str = Form(...), base_path: str = Form(''), admin: Admin = Depends(admin_auth), db: Session = Depends(get_db)):
+    p = VpnPanel(name=name, host=host, port=port, username=username, password=password, base_path=base_path, is_active=True); db.add(p); db.commit(); return {'ok': True, 'id': p.id}
+
+@app.post('/api/admin/panels/{panel_id}')
+def update_panel(panel_id: int, name: str = Form(...), host: str = Form(...), admin: Admin = Depends(admin_auth), db: Session = Depends(get_db)):
+    p = db.get(VpnPanel, panel_id); p.name = name; p.host = host; db.commit(); return {'ok': True}
+
+@app.delete('/api/admin/panels/{panel_id}')
+def delete_panel(panel_id: int, admin: Admin = Depends(admin_auth), db: Session = Depends(get_db)):
+    p = db.get(VpnPanel, panel_id); db.delete(p); db.commit(); return {'ok': True}
+
+@app.post('/api/admin/panels/{panel_id}/sync-inbounds')
+async def sync_inbounds(panel_id: int, admin: Admin = Depends(admin_auth), db: Session = Depends(get_db)):
+    p = db.get(VpnPanel, panel_id); ad = Sanaei3xUiAdapter(p.host, p.port, p.username, p.password, p.base_path); data = await ad.list_inbounds();
+    for row in data.get('obj', []) if isinstance(data, dict) else data:
+        rid = row.get('id'); existing = db.scalar(select(VpnInbound).where(VpnInbound.panel_id==p.id, VpnInbound.inbound_remote_id==rid))
+        if not existing: db.add(VpnInbound(panel_id=p.id, inbound_remote_id=rid, remark=row.get('remark',''), protocol=row.get('protocol','')))
+    db.commit(); return {'ok': True}
+
+@app.get('/api/admin/panels/{panel_id}/inbounds')
+def panel_inbounds(panel_id: int, admin: Admin = Depends(admin_auth), db: Session = Depends(get_db)):
+    return [vars(x) for x in db.scalars(select(VpnInbound).where(VpnInbound.panel_id==panel_id)).all()]

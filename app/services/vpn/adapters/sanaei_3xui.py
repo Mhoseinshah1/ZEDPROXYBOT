@@ -44,7 +44,8 @@ class Sanaei3xUiAdapter(VpnPanelAdapter):
     async def enable_client(self, client_id: str): return await self.update_client(client_id, {"enable": True})
     async def delete_client(self, inbound_id: int, client_id: str): return await self._req("POST", f"/{inbound_id}/delClient/{client_id}")
     async def get_client_usage(self, email: str): return await self._req("GET", f"/getClientTraffics/{email}")
-    async def get_config_link(self, inbound_id: int, email: str): return f"{self.base}/panel/inbounds/{inbound_id}/client/{email}"
+    async def get_config_link(self, inbound_id: int, email: str):
+        return None
     async def get_subscription_link(self, sub_id: str): return f"{self.base}/sub/{sub_id}"
     async def reset_subscription_link(self, inbound_id: int, email: str): return await self._req("POST", f"/resetClientIp/{email}")
 

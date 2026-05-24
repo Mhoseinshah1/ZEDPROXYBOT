@@ -2,7 +2,8 @@ from aiogram import Router, F
 from aiogram.types import Message
 from sqlalchemy import select
 from app.db.session import SessionLocal
-from app.models.entities import Receipt, Payment
+from app.models.entities import Receipt, Payment, Setting
+from app.services.reports.service import ReportService
 
 router = Router()
 
@@ -18,5 +19,7 @@ async def receipt_upload(message: Message):
         if not p: return await message.answer("پرداخت نامعتبر")
         db.add(Receipt(payment_id=pid, telegram_file_id=file_id, status='pending'))
         db.commit()
+        chat_id = db.query(Setting.value).filter(Setting.key=='report_chat_id').scalar()
+        await ReportService(message.bot, db, chat_id, True).emit('receipt_uploaded', f'📥 رسید جدید برای پرداخت #{pid}', {'payment_id': pid})
         await message.answer("رسید ثبت شد و در انتظار تایید ادمین است")
     finally: db.close()

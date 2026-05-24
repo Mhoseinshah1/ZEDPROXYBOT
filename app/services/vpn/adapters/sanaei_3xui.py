@@ -1,3 +1,4 @@
+import json
 import httpx
 import qrcode
 from io import BytesIO
@@ -32,7 +33,9 @@ class Sanaei3xUiAdapter(VpnPanelAdapter):
 
     async def test_connection(self): return await self.list_inbounds()
     async def list_inbounds(self): return await self._req("GET", "/list")
-    async def create_client(self, inbound_id: int, client: dict): return await self._req("POST", "/addClient", json={"id": inbound_id, "settings": '{"clients":[' + str(client).replace("'", '"') + ']}'})
+    async def create_client(self, inbound_id: int, client: dict):
+        settings = json.dumps({"clients": [client]}, ensure_ascii=False)
+        return await self._req("POST", "/addClient", json={"id": inbound_id, "settings": settings})
     async def update_client(self, client_id: str, payload: dict): return await self._req("POST", f"/updateClient/{client_id}", json=payload)
     async def renew_client(self, client_id: str, expiry_time_ms: int): return await self.update_client(client_id, {"expiryTime": expiry_time_ms})
     async def add_traffic(self, client_id: str, bytes_amount: int): return await self.update_client(client_id, {"totalGB": bytes_amount})

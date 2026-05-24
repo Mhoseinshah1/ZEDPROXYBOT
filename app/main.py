@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from fastapi import FastAPI, Depends, HTTPException, Form
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import jwt
 from passlib.context import CryptContext
@@ -11,10 +11,13 @@ from app.db.session import get_db
 from app.db.init_db import init_db
 from app.models.entities import *
 from app.services.vpn.adapters.sanaei_3xui import Sanaei3xUiAdapter, SanaeiApiError
+from fastapi.templating import Jinja2Templates
+from fastapi import Request
 
 app = FastAPI(title="ZedProxyBot API")
 security = HTTPBearer()
 pwd = CryptContext(schemes=["bcrypt"], deprecated="auto")
+templates = Jinja2Templates(directory="app/web/templates")
 
 @app.on_event("startup")
 def boot(): init_db()
@@ -110,5 +113,28 @@ async def panel_test(panel_id: int, _: Admin = Depends(admin_auth), db: Session 
     except SanaeiApiError as e: raise HTTPException(400, str(e))
 
 @app.get('/admin', response_class=HTMLResponse)
-def admin_page():
-    return """<html lang='fa' dir='rtl'><body><h2>پنل مدیریت ساده</h2><p>/api/admin/login</p><ul><li>dashboard</li><li>users</li><li>orders</li><li>payments</li><li>products</li><li>vpn-services</li><li>tickets</li><li>reports</li><li>settings</li></ul></body></html>"""
+def admin_page(request: Request):
+    return templates.TemplateResponse('login.html', {'request': request})
+
+@app.post('/admin/login')
+def admin_login(request: Request, username: str = Form(...), password: str = Form(...), db: Session = Depends(get_db)):
+    admin = db.scalar(select(Admin).where(Admin.username == username))
+    if not admin or not pwd.verify(password, admin.password_hash):
+        return templates.TemplateResponse('login.html', {'request': request})
+    return RedirectResponse('/admin/dashboard', status_code=302)
+
+@app.get('/admin/dashboard', response_class=HTMLResponse)
+def admin_dashboard_page(request: Request):
+    return templates.TemplateResponse('dashboard.html', {'request': request})
+
+@app.post('/api/admin/products')
+def create_product(title: str = Form(...), price: float = Form(...), days: int = Form(...), traffic_gb: int = Form(...), admin: Admin = Depends(admin_auth), db: Session = Depends(get_db)):
+    p = Product(title=title, price=price, days=days, traffic_gb=traffic_gb, is_active=True); db.add(p); db.commit(); audit(db, admin.id, 'product_create', {'id': p.id}); return {'ok': True, 'id': p.id}
+
+@app.post('/api/admin/products/{product_id}')
+def update_product(product_id: int, title: str = Form(...), price: float = Form(...), admin: Admin = Depends(admin_auth), db: Session = Depends(get_db)):
+    p = db.get(Product, product_id); p.title = title; p.price = price; db.commit(); return {'ok': True}
+
+@app.delete('/api/admin/products/{product_id}')
+def delete_product(product_id: int, admin: Admin = Depends(admin_auth), db: Session = Depends(get_db)):
+    p = db.get(Product, product_id); db.delete(p); db.commit(); return {'ok': True}

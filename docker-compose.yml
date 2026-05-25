@@ -1,0 +1,29 @@
+services:
+  app:
+    build: .
+    env_file: .env
+    depends_on: [db, redis]
+    command: sh -c "python -m app.db.init_db && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    ports: ["8000:8000"]
+  bot:
+    build: .
+    env_file: .env
+    depends_on: [db, redis]
+    command: python -m app.bot.app
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: zedproxy
+      POSTGRES_USER: zedproxy
+      POSTGRES_PASSWORD: zedproxy
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+  redis:
+    image: redis:7
+  nginx:
+    image: nginx:1.27
+    depends_on: [app]
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./deploy/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+volumes:
+  pgdata:

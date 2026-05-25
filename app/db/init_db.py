@@ -12,12 +12,12 @@ def init_db():
     db = SessionLocal()
     try:
         if not db.scalar(select(Admin).where(Admin.telegram_id == settings.main_admin_id)):
-            db.add(Admin(telegram_id=settings.main_admin_id, username="main_admin", password_hash=pwd.hash("admin123"), role="owner"))
+            db.add(Admin(telegram_id=settings.main_admin_id, username="main_admin", password_hash=pwd.hash(settings.admin_password or "change-me"), role="owner"))
         for k, v in {"welcome": "به ربات فروش VPN خوش آمدید 🌟", "payment_waiting": "رسید واریز را ارسال کنید.", "buy_success": "سرویس شما فعال شد ✅"}.items():
             if not db.scalar(select(BotText).where(BotText.key == k)): db.add(BotText(key=k, value=v))
         for p in ["android", "ios", "windows", "macos"]:
             if not db.scalar(select(AppDownload).where(AppDownload.platform == p)): db.add(AppDownload(platform=p, url="https://example.com"))
-        defaults = {"report_chat_id": "", "card_number": settings.card_number, "card_holder_name": settings.card_holder_name}
+        defaults = {"report_chat_id": settings.report_group_chat_id or "", "card_number": settings.card_number, "card_holder": settings.card_holder}
         for k, v in defaults.items():
             if not db.scalar(select(Setting).where(Setting.key == k)): db.add(Setting(key=k, value=v or ""))
         if not db.scalar(select(Product).limit(1)): db.add(Product(title="اشتراک یک‌ماهه", price=250000, days=30, traffic_gb=100, is_active=True))

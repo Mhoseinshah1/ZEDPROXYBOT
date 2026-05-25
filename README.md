@@ -1,47 +1,37 @@
-# ZEDPROXYBOT - فاز اول
+# ZEDPROXYBOT
 
-## امکانات فعلی فاز اول
-- ربات تلگرام aiogram 3 با منوی فارسی: شروع، پروفایل، کیف پول، خرید، ثبت تیکت.
-- API مدیریت FastAPI با ورود ادمین JWT و داشبورد.
-- مدل‌های اصلی دیتابیس برای کاربران، کیف پول، سفارش، پرداخت، VPN، تیکت، گزارش.
-- آداپتر پنل سنایی 3x-ui با endpointهای `/login` و `/panel/api/inbounds/*`.
-- Docker Compose شامل app, bot, db, redis, nginx.
-- نصب تعاملی Ubuntu 24 با `install.sh`.
-
-## اجرا
+## اجرای سریع
 ```bash
 cp .env.example .env
+docker compose down
 docker compose up -d --build
+docker compose ps
+curl http://127.0.0.1:8000/health
 ```
 
-## نصب یک‌خطی
+## تنظیم ادمین اصلی
+- در `.env` مقدار `MAIN_ADMIN_ID` را با آیدی عددی تلگرام خود پر کنید.
+- `ADMIN_PASSWORD` را هم تعیین کنید.
+- با `/start` اگر آیدی شما برابر `MAIN_ADMIN_ID` باشد، خودکار به عنوان owner ثبت می‌شوید.
+
+## تست ربات (مرحله‌به‌مرحله)
+1. `/start` بزنید و منوی فارسی را ببینید.
+2. اگر ادمین هستید، دکمه `🛠 پنل ادمین` باید نمایش داده شود.
+3. از `🛒 خرید VPN` یک محصول انتخاب و خرید ثبت کنید.
+4. پیام پرداخت می‌گیرید؛ رسید را عکس/فایل با کپشن `receipt <payment_id>` ارسال کنید.
+5. با اکانت ادمین وارد `🛠 پنل ادمین` > `🧾 پرداخت‌های در انتظار` شوید.
+6. با دکمه inline پرداخت را تایید/رد کنید.
+7. در تایید سفارش VPN، provisioning اجرا می‌شود و لینک/QR برای کاربر ارسال می‌شود.
+
+## لاگ‌ها
 ```bash
-bash <(curl -Ls https://example.com/install.sh)
+docker compose logs --tail=100 app
+docker compose logs --tail=100 bot
 ```
 
-## ورود پنل مدیریت
-1) با اطلاعات ادمین اولیه (`main_admin / admin123`) لاگین API بگیرید:
-```bash
-curl -X POST http://SERVER/api/admin/login -F 'username=main_admin' -F 'password=admin123'
-```
-2) توکن را روی endpointها بزنید.
-
-## افزودن پنل 3x-ui
-از API مدیریت رکورد `vpn_panels` بسازید و سپس:
-```bash
-POST /api/admin/panels/{panel_id}/test
-```
-
-## بکاپ و ری‌استور
+## عملیات
 ```bash
 ./scripts/backup.sh
-./scripts/restore.sh backups/FILE.sql
-```
-
-## آپدیت
-```bash
+./scripts/restore.sh backups/<file>.sql
 ./scripts/update.sh
 ```
-
-## Chat ID گروه گزارشات
-ربات را در گروه ادمین کنید و از ربات‌هایی مثل `@userinfobot` برای دریافت chat id (معمولاً با `-100`) استفاده کنید.

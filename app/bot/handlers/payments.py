@@ -2,24 +2,27 @@ from aiogram import Router, F
 from aiogram.types import Message
 from sqlalchemy import select
 from app.db.session import SessionLocal
-from app.models.entities import Receipt, Payment, Setting
-from app.services.reports.service import ReportService
+from app.models.entities import Receipt, Payment, User
 
 router = Router()
 
 @router.message(F.photo | F.document)
 async def receipt_upload(message: Message):
-    if not message.caption or not message.caption.startswith("receipt "):
-        return
-    pid = int(message.caption.split()[1])
-    file_id = message.photo[-1].file_id if message.photo else message.document.file_id
     db = SessionLocal()
     try:
-        p = db.get(Payment, pid)
-        if not p: return await message.answer("پرداخت نامعتبر")
+        u = db.scalar(select(User).where(User.telegram_id == message.from_user.id))
+        pid = None
+        if message.caption and message.caption.startswith('receipt '):
+            pid = int(message.caption.split()[1])
+        else:
+            rows = db.scalars(select(Payment).where(Payment.user_id == u.id, Payment.status == 'pending').order_by(Payment.id.desc())).all()
+            if len(rows) == 1: pid = rows[0].id
+            elif len(rows) > 1:
+                return await message.answer('چند پرداخت معلق دارید. لطفاً رسید را با کپشن receipt <payment_id> ارسال کنید.')
+        if not pid:
+            return await message.answer('پرداخت معلقی پیدا نشد.')
+        file_id = message.photo[-1].file_id if message.photo else message.document.file_id
         db.add(Receipt(payment_id=pid, telegram_file_id=file_id, status='pending'))
         db.commit()
-        chat_id = db.query(Setting.value).filter(Setting.key=='report_chat_id').scalar()
-        await ReportService(message.bot, db, chat_id, True).emit('receipt_uploaded', f'📥 رسید جدید برای پرداخت #{pid}', {'payment_id': pid})
-        await message.answer("رسید ثبت شد و در انتظار تایید ادمین است")
+        await message.answer(f'رسید برای پرداخت #{pid} ثبت شد و در انتظار تایید ادمین است.')
     finally: db.close()

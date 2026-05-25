@@ -6,7 +6,7 @@ from app.models.entities import Product
 
 router = Router()
 
-@router.message(F.text == '🛒 خرید VPN')
+@router.message(F.text == '🔐 خرید اشتراک')
 async def list_products(message: Message):
     db = SessionLocal()
     try:

@@ -9,7 +9,7 @@ from app.models.entities import User, Wallet, Payment, WalletTransaction
 
 router = Router()
 
-@router.message(F.text == '💼 کیف پول')
+@router.message(F.text == '🏦 کیف پول + شارژ')
 async def wallet_menu(message: Message):
     db = SessionLocal()
     try:

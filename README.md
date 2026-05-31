@@ -2,7 +2,7 @@
 
 ## نصب با یک دستور (Ubuntu 24)
 ```bash
-bash <(curl -Ls https://raw.githubusercontent.com/Mhoseinshah1/ZEDPROXYBOT/main/install.sh)
+bash <(curl -Ls https://raw.githubusercontent.com/Mhoseinshah1/ZEDPROXYBOT-v2/main/install.sh)
 ```
 
 اسکریپت منوی مدیریت می‌دهد:
@@ -24,7 +24,7 @@ bash <(curl -Ls https://raw.githubusercontent.com/Mhoseinshah1/ZEDPROXYBOT/main/
 ## آپدیت بعد از merge
 بعد از هر merge روی branch `main` فقط همین دستور را بزنید:
 ```bash
-bash <(curl -Ls https://raw.githubusercontent.com/Mhoseinshah1/ZEDPROXYBOT/main/install.sh)
+bash <(curl -Ls https://raw.githubusercontent.com/Mhoseinshah1/ZEDPROXYBOT-v2/main/install.sh)
 ```
 سپس گزینه `2) آپدیت ربات` را انتخاب کنید.
 

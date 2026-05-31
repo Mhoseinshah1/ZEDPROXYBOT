@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_URL="https://github.com/Mhoseinshah1/ZEDPROXYBOT.git"
+REPO_URL="https://github.com/Mhoseinshah1/ZEDPROXYBOT-v2.git"
 INSTALL_DIR="/opt/zedproxybot"
 BACKUP_DIR="$INSTALL_DIR/backups"
 

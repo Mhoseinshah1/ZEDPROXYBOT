@@ -6,7 +6,7 @@ from app.models.entities import Tutorial
 
 router = Router()
 
-@router.message(F.text == "🎓 آموزش‌ها")
+@router.message((F.text == "🎓 آموزش‌ها") | (F.text == "📚 آموزش"))
 async def tutorials(message: Message):
     db = SessionLocal()
     try:

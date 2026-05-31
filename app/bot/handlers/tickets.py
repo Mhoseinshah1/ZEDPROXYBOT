@@ -7,7 +7,7 @@ from app.services.reports.service import ReportService
 
 router = Router()
 
-@router.message(F.text == "🎫 ثبت تیکت")
+@router.message((F.text == "🎫 ثبت تیکت") | (F.text == "🎫 پشتیبانی"))
 async def new_ticket(message: Message):
     db = SessionLocal()
     try:

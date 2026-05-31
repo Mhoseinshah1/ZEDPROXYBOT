@@ -1,7 +1,7 @@
 import asyncio
 from aiogram import Bot, Dispatcher
 from app.core.config import settings
-from app.bot.handlers import start, profile, wallet, products, orders, payments, vpn_services, tickets, tutorials
+from app.bot.handlers import start, profile, wallet, products, orders, payments, vpn_services, tickets, tutorials, growth
 from app.bot.handlers.admin import dashboard as admin_dashboard, payments as admin_payments
 
 
@@ -17,6 +17,7 @@ async def run_bot():
     dp.include_router(vpn_services.router)
     dp.include_router(tickets.router)
     dp.include_router(tutorials.router)
+    dp.include_router(growth.router)
     dp.include_router(admin_dashboard.router)
     dp.include_router(admin_payments.router)
 

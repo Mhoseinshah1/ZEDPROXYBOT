@@ -61,3 +61,6 @@ curl http://127.0.0.1:8000/health
 - Installer asks only technical values (token/admin/domain/db/redis/report chat).
 - Card number and card holder are **not** asked during install.
 - Configure financial settings later in bot: `🛠 پنل ادمین → ⚙️ تنظیمات → 💳 تنظیمات مالی`.
+
+## الهام از MirzaBot
+در این نسخه، کاتالوگ قابلیت‌ها و منوی کاربر با الهام از قابلیت‌های عمومی پروژه MirzaBot (فروش VPN، تست رایگان، پشتیبانی، آموزش، رفرال، گردونه و مدیریت سرویس‌ها) همگام شده است. مرجع عمومی بررسی‌شده: https://github.com/mahdiMGF2/mirzabot
